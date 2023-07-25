@@ -1,0 +1,10 @@
+version: '2'
+services:
+  rtpengine_rss_to_trago:
+    image: 
+    restart: always
+    network_mode: "host"
+    container_name: 
+    volumes:
+      - ./config/rtpengine_rss_to_trago.conf:/etc/rtpengine.conf
+      - ./config/entrypoint.sh:/entrypoint.sh
