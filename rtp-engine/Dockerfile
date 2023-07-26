@@ -26,8 +26,8 @@ COPY config/entrypoint.sh /entrypoint.sh
 
 COPY config/rtpengine.conf /etc/rtpengine.conf
 
-RUN chmod 777 /entrypoint.sh
-RUN chmod 777 /etc/rtpengine.conf
+RUN  chmod 555 /entrypoint.sh
+RUN  chmod 444 /etc/rtpengine.conf
 
 ENTRYPOINT ["/entrypoint.sh"]
 
