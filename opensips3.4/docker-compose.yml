@@ -3,7 +3,7 @@ services:
   opensips:
     #  image: opensips/opensips:3.4
    restart: always
-   image: opensips3.4new
+   image: opensips-image
    network_mode: "host"
    container_name: opensips3.4
      # ports:
