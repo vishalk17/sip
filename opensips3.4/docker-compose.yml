@@ -1,7 +1,9 @@
 version: '3.0'
 services:
   opensips:
-    #  image: opensips/opensips:3.4
+     build:
+       context: .
+       dockerfile: Dockerfile
    restart: always
    image: opensips-image
    network_mode: "host"
