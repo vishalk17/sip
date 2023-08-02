@@ -1,22 +1,11 @@
 version: '3.0'
 services:
   opensips:
-     build:
-       context: .
-       dockerfile: Dockerfile
-   restart: always
-   image: opensips-image
-   network_mode: "host"
-   container_name: opensips3.4
-     # ports:
-     # - 5060:5060
-     #   volumes:
-     # - ./run.sh:/run.sh
-     #- ./config/opensips-init:/etc/init.d/opensips
-     #- ./config/opensips-default:/etc/default/opensips
-     #     - ./opensips.cfg:/etc/opensips/opensips.cfg
-       # - /etc/letsencrypt/live/s1.tragofone.com/cert.pem:/mycerts/certs/cert.pem
-       # - /etc/letsencrypt/live/s1.tragofone.com/privkey.pem:/mycerts/private/privkey.pem
-       # - /etc/letsencrypt/live/s1.tragofone.com/fullchain.pem:/mycerts/certs/chain.pem
-       #- /etc/letsencrypt/live/s1.tragofone.com:/mycerts/certs
-       #- /etc/letsencrypt/live:/mycerts
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    image: opensips-image
+    network_mode: "host"
+    container_name: opensips3.4
+
