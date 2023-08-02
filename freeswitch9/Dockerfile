@@ -60,7 +60,6 @@ RUN     ./rebootstrap.sh && ./configure \
 	
 
 RUN 	cd /usr/local/freeswitch \
-	&& rm -Rf conf/dialplan/* conf/sip_profiles/* conf/directory/* htdocs fonts images \
 	&& cd /usr/local && rm -Rf src share include games etc \
 	&& cd /usr && rm -Rf games include \
 	&& cd /usr/share && rm -Rf freeswitch man \

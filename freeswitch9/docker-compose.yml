@@ -1,29 +1,32 @@
 version: '2'
 services:
    freeswitch:
+     build:
+       context: .
+       dockerfile: Dockerfile
      hostname: freeswitch
      container_name: freeswitch
      network_mode: "host"
      restart: always
-     image: freeswitchnewversion
-     ports:
-     - 5062:5062
-     - 5061:5061
-     - 5080:5080
-     - 5081:5081
-     - 7443:7443
-     - 8021:8021
-     - 8085:8085
-     - 8082:8082
-     - 5062:5062/udp 
-     - 5061:5061/udp
-     - 5080:5080/udp
+     #  image: freeswitchnewversion
+     # ports:
+     # - 5062:5062
+     # - 5061:5061
+     # - 5080:5080
+     #- 5081:5081
+     #- 7443:7443
+     #- 8021:8021
+     #- 8085:8085
+     #- 8082:8082
+     #- 5062:5062/udp 
+     #- 5061:5061/udp
+     #- 5080:5080/udp
      logging:
        options:
          max-size: 50m
-     volumes:
-       - ./run.sh:/run.sh
-       - ./modules.conf.xml:/usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
+         #volumes:
+         # - ./run.sh:/run.sh
+         #- ./modules.conf.xml:/usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
          #       - ./event_socket.conf.xml:/usr/local/freeswitch/conf/autoload_configs/event_socket.conf.xml
          #- ./internal.xml:/usr/local/freeswitch/conf/sip_profiles/internal.xml
          #- ./vars.xml:/usr/local/freeswitch/conf/vars.xml 
