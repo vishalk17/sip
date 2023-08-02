@@ -5,8 +5,8 @@ set -xe
 
 CFG_PATH="/usr/local/freeswitch/conf/vars.xml"
 
-FS_IP="65.109.6.104"
-FS_PORT="5062"
+FS_IP="localhost"
+FS_PORT="5060"
 GLOBAL_CODEC_FS="OPUS,G722,PCMU,PCMA,H264,VP8"
 OUTBOUND_CODEC_FS="OPUS,G722,PCMU,PCMA,H264,VP8"
 

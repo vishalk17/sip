@@ -60,6 +60,7 @@ RUN     ./rebootstrap.sh && ./configure \
 	
 
 RUN 	cd /usr/local/freeswitch \
+#	&& rm -Rf conf/dialplan/* conf/sip_profiles/* conf/directory/* htdocs fonts images \
 	&& cd /usr/local && rm -Rf src share include games etc \
 	&& cd /usr && rm -Rf games include \
 	&& cd /usr/share && rm -Rf freeswitch man \
@@ -88,9 +89,9 @@ RUN 	cd /usr/local/freeswitch \
 #COPY docker/freeswitch/conf/uuid_kill.lua  /usr/local/freeswitch/scripts/uuid_kill.lua
 #COPY docker/freeswitch/conf/senddtmf.lua  /usr/local/freeswitch/scripts/senddtmf.lua
 #COPY docker/freeswitch/conf/on_callupdate.lua  /usr/local/freeswitch/scripts/on_callupdate.lua
-COPY ./vars.xml /usr/local/freeswitch/conf/vars.xml 
-COPY ./modules.conf.xml /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml 
+#COPY ./vars.xml /usr/local/freeswitch/conf/vars.xml 
+#COPY ./modules.conf.xml /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml 
 COPY ./run.sh /run.sh
 RUN chmod -R 777 /run.sh
-EXPOSE 5062 5062/udp 5063 5063/udp 5080 5080/udp 5081 7443 8021 8081 8082
+EXPOSE 5060 5060/udp 5061 5061/udp 5080 5080/udp 5081 7443 8021 8081 8082
 ENTRYPOINT ["/bin/sh", "/run.sh"]

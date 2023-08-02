@@ -1,5 +1,0 @@
-how to run
-
-docker build -t freeswitch-image .
-
-docker run -it --name freeswitch-container -p 5060:5060 -p 7443:7443 -p 8021:8021 -p 8081:8081 -p 8082:8082 -p 5062:5062/udp -p 5063:5063/udp -p 5080:5080 -p 5081:5081  freeswitch-image
