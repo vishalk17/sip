@@ -17,7 +17,7 @@ RUN apt-get -y  --quiet --force-yes upgrade curl iproute2 \
   libcurl4-openssl-dev libavcodec-extra gperf libspandsp-dev libwebsockets-dev flex bison bash libncurses5-dev m4 libmicrohttpd-dev locate git sed wget tar libjson-c-dev libsnmp-dev php php-curl redis-tools snmp snmp-mibs-downloader librabbitmq-dev python3 python3-pip python3-dev gcc default-libmysqlclient-dev python3-mysqldb python3-sqlalchemy python3-sqlalchemy-utils python3-openssl
 RUN pip3 install mysqlclient sqlalchemy sqlalchemy-utils pyOpenSSL
 
-RUN cd /usr/local/src && git clone https://github.com/OpenSIPS/opensips.git && cd /usr/local/src/opensips 
+RUN cd /usr/local/src && git clone https://github.com/OpenSIPS/opensips.git && cd /usr/local/src/opensips && git checkout 3.4 
 
 WORKDIR /usr/local/src/opensips
 RUN make && make install
@@ -54,4 +54,3 @@ RUN python3 setup.py install clean
 
 
 ENTRYPOINT ["/run.sh"]
-#CMD ["tail", "-f", "/dev/null"]
