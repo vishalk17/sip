@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  myservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: freeswitch
+      #    command: tail -f /dev/null  # Keeps the container running indefinitely
+    restart: always
+    network_mode: "host"
+    privileged: true
+    cap_add:
+      - SYS_NICE
+      - SYS_RESOURCE
+
