@@ -13,7 +13,7 @@ RUN apt install -y --quiet --no-install-recommends \
     build-essential libavformat-dev libpq-dev python3-pip php libapache2-mod-php \
     uuid-dev zlib1g-dev libjpeg-dev libsqlite3-dev libcurl4-openssl-dev libpcre3-dev \
     libspeexdsp-dev libedit-dev yasm libopus-dev libsndfile1-dev sngrep dnsutils \
-    ncat default-mysql-client jq sqlite3 libfreetype6 awscli xmlstarlet --no-install-recommends
+    ncat default-mysql-client jq sqlite3 libfreetype6 awscli xmlstarlet libspandsp2 --no-install-recommends
 
 # Install GNU autoconf
 RUN wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz \
@@ -99,9 +99,7 @@ COPY ./run.sh /run.sh
 RUN chmod 777 /run.sh
 
 # Expose ports
-EXPOSE 5060 5060/udp 5061 5061/udp 5080 5080/udp 5081 7443 8021 8081 8082
-
-RUN apt-get update && apt-get install libspandsp2 -y
+EXPOSE 5060 5060/udp 5061 5061/udp 5066 5080 5080/udp  5081 7443 8021
 
 # Entrypoint
 CMD ["/bin/sh", "/run.sh"]
