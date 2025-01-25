@@ -52,7 +52,8 @@ COPY ./files/modules.conf .
 RUN ./rebootstrap.sh \
     && ./configure \
     && make && make install \
-    && make sounds-install moh-install
+    && make sounds-install moh-install \
+    && cd .. && rm -rf freeswitch-1.10.9.-release
 
 # Install MySQL ODBC driver
 RUN mkdir -p /usr/lib/odbc \
@@ -94,13 +95,18 @@ RUN cd /usr/local/freeswitch \
     && echo "alias freeswitch='/usr/local/freeswitch/bin/freeswitch'" >> ~/.bashrc \
     && echo "alias fs_cli='/usr/local/freeswitch/bin/fs_cli'" >> ~/.bashrc
 
+# Issue: FreeSWITCH couldn't find libspandsp.so.3 & other as well because /usr/local/lib wasn't in the linker path
+# Solution: Add /usr/local/lib to the linker path
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf \
+    && ldconfig
+
 # Copy run script and set permissions
 COPY ./run.sh /run.sh
-RUN chmod 777 /run.sh
+RUN chmod +x /run.sh
 
 # Expose ports
 EXPOSE 5060 5060/udp 5061 5061/udp 5066 5080 5080/udp  5081 7443 8021
 
-# Entrypoint
+# RUN
 CMD ["/bin/sh", "/run.sh"]
 
