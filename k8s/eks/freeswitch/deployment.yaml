@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: freeswitch
-  namespace: voip-system
 spec:
   replicas: 2
   selector:
@@ -18,37 +17,8 @@ spec:
         image: vishalk17/freeswitch-1.10.9:v1.1
         ports:
         - containerPort: 5060
-          protocol: UDP
-          name: sip-udp
         - containerPort: 5061
-          protocol: TCP
-          name: sip-tls
         - containerPort: 5066
-          protocol: TCP
-          name: sip-alt
         - containerPort: 5080
-          protocol: UDP
-          name: ws-udp
         - containerPort: 7443
-          protocol: TCP
-          name: https-alt
         - containerPort: 8021
-          protocol: TCP
-          name: event-socket
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "1Gi"
-          limits:
-            cpu: "2"
-            memory: "4Gi"
-        readinessProbe:
-          tcpSocket:
-            port: 8021
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        livenessProbe:
-          tcpSocket:
-            port: 8021
-          initialDelaySeconds: 30
-          periodSeconds: 20
