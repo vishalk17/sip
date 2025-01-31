@@ -1,112 +1,97 @@
-FROM debian:10.10-slim
+# Stage 1: Builder image
+FROM debian:12.9-slim AS builder
 
-# Prepare man directories and update system
+# Install build dependencies
 RUN for i in $(seq 1 8); do mkdir -p "/usr/share/man/man${i}"; done \
-    && apt update && apt -y --quiet --allow-remove-essential upgrade
+    && apt update && apt -y --quiet --allow-remove-essential upgrade \
+    && apt install -y --quiet --no-install-recommends \
+        apt-utils automake autoconf awscli build-essential ca-certificates cmake cron curl dnsutils git gnupg2 \
+        iputils-ping jq libapache2-mod-php libavformat-dev libcurl4-openssl-dev libedit-dev libfreetype6 libgsl-dev \
+        libjpeg-dev libldns-dev liblua5.2-dev libmongoc-dev libmp3lame-dev libncurses5-dev libogg-dev libopus-dev \
+        libpcap-dev libpcre3-dev libpq-dev librabbitmq-dev libshout3-dev libsndfile1-dev libspeexdsp-dev libsqlite3-dev \
+        libssl-dev libswscale-dev libtiff5-dev libtool libtool-bin libvorbis-dev libvorbis0a lsb-release lua5.2 nano \
+        ncat net-tools ngrep odbc-postgresql php pkg-config procps psmisc python3-pip sngrep sqlite3 systemctl tcpdump \
+        unixodbc unixodbc-dev wget xmlstarlet yasm zlib1g-dev uuid-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN apt install -y --quiet --no-install-recommends \
-    vim gnupg2 apt-utils wget curl git lsb-release cmake libpcap-dev libncurses5-dev libgsl-dev \
-    automake autoconf libtool libtool-bin build-essential pkg-config ca-certificates \
-    libswscale-dev libldns-dev libmp3lame-dev nano net-tools unixodbc unixodbc-dev tcpdump procps \
-    lua5.2 lua5.2-dev libssl-dev luarocks librabbitmq-dev libtiff5-dev \
-    build-essential libavformat-dev libpq-dev python3-pip php libapache2-mod-php \
-    uuid-dev zlib1g-dev libjpeg-dev libsqlite3-dev libcurl4-openssl-dev libpcre3-dev \
-    libspeexdsp-dev libedit-dev yasm libopus-dev libsndfile1-dev sngrep dnsutils \
-    ncat default-mysql-client jq sqlite3 libfreetype6 awscli xmlstarlet libspandsp2 --no-install-recommends
+WORKDIR /home/build
 
-# Install GNU autoconf
-RUN wget https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.gz \
-    && tar -xzvf autoconf-2.71.tar.gz \
-    && cd autoconf-2.71 \
-    && ./configure \
-    && make \
-    && make install \
-    && cd .. && rm -rf autoconf-2.71*
+# Build dependencies
+RUN git clone https://github.com/freeswitch/sofia-sip.git && \
+    cd sofia-sip && \
+    ./bootstrap.sh && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
 
-# Install spandsp library
-RUN git clone https://github.com/freeswitch/spandsp.git \
-    && cd spandsp \
-    && ./bootstrap.sh \
-    && ./configure \
-    && make install \
-    && cd .. && rm -rf spandsp
+RUN git clone https://github.com/freeswitch/spandsp.git && \
+    cd spandsp && \
+    ./bootstrap.sh && \
+    ./configure && \
+    make && \
+    make install && \
+    cd ..
 
-# Install sofia-sip library
-RUN git clone https://github.com/freeswitch/sofia-sip.git \
-    && cd sofia-sip \
-    && ./bootstrap.sh \
-    && ./configure \
-    && make install \
-    && cd .. && rm -rf sofia-sip
+RUN git clone https://github.com/signalwire/libks.git && \
+    cd libks && \
+    cmake . && make && make install && \
+    cd ..
 
-# Download and extract FreeSWITCH
-WORKDIR /usr/local/src
-RUN wget https://files.freeswitch.org/releases/freeswitch/freeswitch-1.10.9.-release.tar.gz \
-    && tar -xvf freeswitch-1.10.9.-release.tar.gz \
-    && rm freeswitch-1.10.9.-release.tar.gz
+RUN wget https://github.com/SIPp/sipp/releases/download/v3.6.1/sipp-3.6.1.tar.gz && \
+    tar -xvzf sipp-3.6.1.tar.gz && \
+    cd sipp-3.6.1 && \
+    cmake . -DUSE_PCAP=1 && \
+    make && make install && \
+    cd ..
 
-# Build and install FreeSWITCH
-WORKDIR /usr/local/src/freeswitch-1.10.9.-release
-COPY ./files/modules.conf .
-RUN ./rebootstrap.sh \
-    && ./configure \
-    && make && make install \
-    && make sounds-install moh-install \
-    && cd .. && rm -rf freeswitch-1.10.9.-release
+RUN git clone https://github.com/signalwire/signalwire-c.git && \
+    cd signalwire-c && \
+    cmake . && make && make install && \
+    cd ..
 
-# Install MySQL ODBC driver
-RUN mkdir -p /usr/lib/odbc \
-    && wget https://cdn.mysql.com/archives/mysql-connector-odbc-8.0/mysql-connector-odbc-8.0.23-linux-glibc2.12-x86-64bit.tar.gz \
-    && tar xvf mysql-connector-odbc-8.0.23-linux-glibc2.12-x86-64bit.tar.gz \
-    && mv mysql-connector-odbc-8.0.23-linux-glibc2.12-x86-64bit/lib/* /usr/lib/odbc/ \
-    && rm -rf mysql-connector-odbc-8.0.23-linux-glibc2.12-x86-64bit*
+# Build FreeSWITCH
+RUN wget https://files.freeswitch.org/freeswitch-releases/freeswitch-1.10.12.-release.tar.gz && \
+    tar -xzvf freeswitch-1.10.12.-release.tar.gz && \
+    mv freeswitch-1.10.12.-release freeswitch
 
-# Install Lua rocks
-RUN luarocks install luasocket \
-    && luarocks install luasec \
-    && luarocks install ftcsv \
-    && luarocks install enum
+WORKDIR /home/build/freeswitch
 
-# Install SIPp
-WORKDIR /usr/local/src
-RUN mkdir -p sipp && cd sipp \
-    && wget https://github.com/SIPp/sipp/releases/download/v3.6.1/sipp-3.6.1.tar.gz \
-    && tar -xvzf sipp-3.6.1.tar.gz \
-    && cd sipp-3.6.1 \
-    && cmake . -DUSE_PCAP=1 \
-    && make && make install \
-    && cd ../.. && rm -rf sipp
+COPY modules.conf .
+COPY patches/0001-mod_spandsp_dsp.c-resolve-V.18-mode-and-v18_init-com.patch .
 
-# Install Keepalived
-RUN mkdir -p keepalived && cd keepalived \
-    && wget http://www.keepalived.org/software/keepalived-2.2.7.tar.gz \
-    && tar -xvzf keepalived-2.2.7.tar.gz \
-    && cd keepalived-2.2.7 \
-    && ./configure --prefix=/usr \
-    && make && make install \
-    && cd ../.. && rm -rf keepalived
+RUN patch -p1 < 0001-mod_spandsp_dsp.c-resolve-V.18-mode-and-v18_init-com.patch && \
+    ./rebootstrap.sh -j$(nproc) && \
+    ./configure --enable-core-pgsql-support && \
+    make -j$(nproc) && \
+    make install && \
+    make sounds-install moh-install
 
-# Clean up unnecessary files and set up aliases
-RUN cd /usr/local/freeswitch \
-    && ln -s /usr/local/freeswitch/bin/freeswitch /usr/bin/freeswitch \
-    && ln -s /usr/local/freeswitch/bin/fs_cli /usr/bin/fs_cli \
-    && luarocks install ftcsv 1.2.0-1 \
-    && echo "alias freeswitch='/usr/local/freeswitch/bin/freeswitch'" >> ~/.bashrc \
-    && echo "alias fs_cli='/usr/local/freeswitch/bin/fs_cli'" >> ~/.bashrc
+# Stage 2: Final image
+FROM debian:12.9-slim AS final
 
-# Issue: FreeSWITCH couldn't find libspandsp.so.3 & other as well because /usr/local/lib wasn't in the linker path
-# Solution: Add /usr/local/lib to the linker path
-RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf \
-    && ldconfig
+# Install only runtime dependencies
+RUN for i in $(seq 1 8); do mkdir -p "/usr/share/man/man${i}"; done \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates libavformat59 libcurl4 libedit2 libldns3 liblua5.2-0 libmp3lame0 libmpg123-0 libncurses6 \
+        libogg0 libopus0 libpcre3 libpq5 librabbitmq4 libshout3 libsndfile1 libspeexdsp1 libsqlite3-0 libssl3 \
+        libswscale6 libtiff6 libvorbis0a odbc-postgresql unixodbc wget \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy run script and set permissions
-COPY ./run.sh /run.sh
-RUN chmod +x /run.sh
+# Copy built artifacts from builder
+COPY --from=builder /usr/local /usr/local
 
-# Expose ports
-EXPOSE 5060 5060/udp 5061 5061/udp 5066 5080 5080/udp  5081 7443 8021
+# Copy configuration files
+COPY etc/odbc.ini /etc/
+COPY etc/switch.conf.xml /usr/local/freeswitch/conf/autoload_configs/
 
-# RUN
-CMD ["/bin/sh", "/run.sh"]
+# Configure dynamic linker
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf && \
+    ldconfig && \
+    ln -s /usr/local/freeswitch/bin/freeswitch /usr/bin/freeswitch && \
+    ln -s /usr/local/freeswitch/bin/fs_cli /usr/bin/fs_cli
 
+EXPOSE 5060/tcp 5060/udp 5061/tcp 5061/udp 5066/tcp 5080/tcp 5080/udp 5081/tcp 7443/tcp 8021/tcp
+
+CMD ["/usr/local/freeswitch/bin/freeswitch"]

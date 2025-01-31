@@ -1,0 +1,118 @@
+From 5c10656c38a4631a25863e468b2d2af35dc429c1 Mon Sep 17 00:00:00 2001
+From: vishalk17 <vishalkapadi95@gmail.com>
+Date: Fri, 31 Jan 2025 04:47:54 +0530
+Subject: [PATCH] mod_spandsp_dsp.c: resolve V.18 mode and v18_init compilation
+ errors
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+--------------
+Commit that Introduced Compilation Error :
+
+https://github.com/freeswitch/spandsp/commit/d9681c3747ff4f56b1876557b9f6d894b7e6c18d#diff-348092e97708aedff108326c3f98a9ea907ee9a58b5a780e508d5f08503475fb
+
+--------------
+Resolve compilation errors in `mod_spandsp_dsp.c` caused by SpanDSP API updates:
+1. **Mode Constants**: Updated deprecated mode names (e.g., `V18_MODE_5BIT_4545` → `V18_MODE_WEITBRECHT_5BIT_4545`).
+2. **v18_init Calls**: Added missing `status_handler` and `status_handler_user_data` arguments (set to `NULL`).
+
+These changes align mod_spandsp_dsp.c with the SpanDSP library’s API defined in v18.h.
+
+---------------
+Explanation :
+
+    - The mode constants in mod_spandsp_dsp.c (e.g., V18_MODE_5BIT_4545) are outdated. SpanDSP's v18.h uses newer names like V18_MODE_WEITBRECHT_5BIT_4545,
+
+    - The v18_init function now requires 8 arguments (as per v18.h), but the code only passes 6.Add two NULL arguments for the missing parameters (status_handler and status_handler_user_data).
+-------------
+for ref. Errors were:
+
+mod_spandsp_dsp.c: In function 'get_v18_mode':
+mod_spandsp_dsp.c:159:17: error: 'V18_MODE_5BIT_4545' undeclared (first use in this function)
+  159 |         int r = V18_MODE_5BIT_4545;
+      |                 ^~~~~~~~~~~~~~~~~~
+mod_spandsp_dsp.c:159:17: note: each undeclared identifier is reported only once for each function it appears in
+mod_spandsp_dsp.c:165:29: error: 'V18_MODE_5BIT_50' undeclared (first use in this function)
+  165 |                         r = V18_MODE_5BIT_50;
+      |                             ^~~~~~~~~~~~~~~~
+mod_spandsp_dsp.c: In function 'spandsp_tdd_send_session':
+mod_spandsp_dsp.c:216:21: error: too few arguments to function 'v18_init'
+  216 |         tdd_state = v18_init(NULL, TRUE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, NULL);
+      |                     ^~~~~~~~
+In file included from /usr/local/include/spandsp.h:114,
+                 from mod_spandsp.h:50,
+                 from mod_spandsp_dsp.c:36:
+/usr/local/include/spandsp/v18.h:138:29: note: declared here
+  138 | SPAN_DECLARE(v18_state_t *) v18_init(v18_state_t *s,
+      |                             ^~~~~~~~
+mod_spandsp_dsp.c: In function 'spandsp_tdd_encode_session':
+mod_spandsp_dsp.c:263:26: error: too few arguments to function 'v18_init'
+  263 |         pvt->tdd_state = v18_init(NULL, TRUE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, NULL);
+      |                          ^~~~~~~~
+/usr/local/include/spandsp/v18.h:138:29: note: declared here
+  138 | SPAN_DECLARE(v18_state_t *) v18_init(v18_state_t *s,
+      |                             ^~~~~~~~
+mod_spandsp_dsp.c: In function 'spandsp_tdd_decode_session':
+mod_spandsp_dsp.c:341:26: error: too few arguments to function 'v18_init'
+  341 |         pvt->tdd_state = v18_init(NULL, FALSE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, pvt);
+      |                          ^~~~~~~~
+/usr/local/include/spandsp/v18.h:138:29: note: declared here
+  138 | SPAN_DECLARE(v18_state_t *) v18_init(v18_state_t *s,
+      |                             ^~~~~~~~
+make[4]: *** [Makefile:772: mod_spandsp_la-mod_spandsp_dsp.lo] Error 1
+---
+ src/mod/applications/mod_spandsp/mod_spandsp_dsp.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/mod/applications/mod_spandsp/mod_spandsp_dsp.c b/src/mod/applications/mod_spandsp/mod_spandsp_dsp.c
+index 836808a48d..9558f42169 100644
+--- a/src/mod/applications/mod_spandsp/mod_spandsp_dsp.c
++++ b/src/mod/applications/mod_spandsp/mod_spandsp_dsp.c
+@@ -156,13 +156,13 @@ static int get_v18_mode(switch_core_session_t *session)
+ {
+ 	switch_channel_t *channel = switch_core_session_get_channel(session);
+ 	const char *var;
+-	int r = V18_MODE_5BIT_4545;
++	int r = V18_MODE_WEITBRECHT_5BIT_4545;
+ 
+ 	if ((var = switch_channel_get_variable(channel, "v18_mode"))) {
+ 		if (!strcasecmp(var, "5BIT_45") || !strcasecmp(var, "baudot")) {
+-			r = V18_MODE_5BIT_4545;
++			r = V18_MODE_WEITBRECHT_5BIT_4545;
+ 		} else if (!strcasecmp(var, "5BIT_50")) {
+-			r = V18_MODE_5BIT_50;
++			r = V18_MODE_WEITBRECHT_5BIT_50;
+ 		} else if (!strcasecmp(var, "DTMF")) {
+ 			r = V18_MODE_DTMF;
+ 		} else if (!strcasecmp(var, "EDT")) {
+@@ -213,7 +213,7 @@ switch_status_t spandsp_tdd_send_session(switch_core_session_t *session, const c
+ 		return SWITCH_STATUS_FALSE;
+ 	}
+ 
+-	tdd_state = v18_init(NULL, TRUE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, NULL);
++	tdd_state = v18_init(NULL, TRUE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, NULL, NULL, NULL);
+ 
+ 
+ 	v18_put(tdd_state, text, -1);
+@@ -260,7 +260,7 @@ switch_status_t spandsp_tdd_encode_session(switch_core_session_t *session, const
+ 	}
+ 
+ 	pvt->session = session;
+-	pvt->tdd_state = v18_init(NULL, TRUE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, NULL);
++	pvt->tdd_state = v18_init(NULL, TRUE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, NULL, NULL, NULL);
+ 	pvt->head_lead = TDD_LEAD;
+ 
+ 	v18_put(pvt->tdd_state, text, -1);
+@@ -338,7 +338,7 @@ switch_status_t spandsp_tdd_decode_session(switch_core_session_t *session)
+ 	}
+ 
+ 	pvt->session = session;
+-	pvt->tdd_state = v18_init(NULL, FALSE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, pvt);
++	pvt->tdd_state = v18_init(NULL, FALSE, get_v18_mode(session), V18_AUTOMODING_GLOBAL, put_text_msg, pvt, NULL, NULL);
+ 
+ 	if ((status = switch_core_media_bug_add(session, "spandsp_tdd_decode", NULL,
+ 						tdd_decode_callback, pvt, 0, SMBF_READ_REPLACE | SMBF_NO_PAUSE, &bug)) != SWITCH_STATUS_SUCCESS) {
+-- 
+2.34.1
+

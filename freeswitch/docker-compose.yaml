@@ -1,14 +1,40 @@
+# version: '3.8'
+
+# services:
+#   debian-container:
+#     build: .
+#     container_name: debian_infinite
+#     restart: always
+
 version: '3.8'
 
 services:
-  freeswitch1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: freeswitch1
-      #  command: tail -f /dev/null  # Keeps the container running indefinitely
-    restart: always
-    network_mode: "host"
+  postgresql:
+    image: postgres:13
+    container_name: postgresql
+    network_mode: host
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  freeswitch:
+    build: .
+    container_name: freeswitch
+    network_mode: host
+    depends_on:
+      - postgresql
+    volumes:
+      - ./etc/odbc.ini:/etc/odbc.ini
+      - ./etc/switch.conf.xml:/usr/local/freeswitch/conf/autoload_configs/switch.conf.xml
+    restart: unless-stopped
     cap_add:
       - SYS_NICE
       - SYS_RESOURCE
+
+
+volumes:
+  postgres_data:
