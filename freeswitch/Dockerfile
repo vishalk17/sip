@@ -10,7 +10,7 @@ RUN for i in $(seq 1 8); do mkdir -p "/usr/share/man/man${i}"; done \
         libjpeg-dev libldns-dev liblua5.2-dev libmongoc-dev libmp3lame-dev libncurses5-dev libogg-dev libopus-dev \
         libpcap-dev libpcre3-dev libpq-dev librabbitmq-dev libshout3-dev libsndfile1-dev libspeexdsp-dev libsqlite3-dev \
         libssl-dev libswscale-dev libtiff5-dev libtool libtool-bin libvorbis-dev libvorbis0a lsb-release lua5.2 nano \
-        ncat net-tools ngrep odbc-postgresql php pkg-config procps psmisc python3-pip sngrep sqlite3 systemctl tcpdump \
+        ncat net-tools ngrep odbc-postgresql php pkg-config procps psmisc python3-pip sqlite3 tcpdump \
         unixodbc unixodbc-dev wget xmlstarlet yasm zlib1g-dev uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -76,14 +76,16 @@ RUN for i in $(seq 1 8); do mkdir -p "/usr/share/man/man${i}"; done \
     && apt-get install -y --no-install-recommends \
         ca-certificates libavformat59 libcurl4 libedit2 libldns3 liblua5.2-0 libmp3lame0 libmpg123-0 libncurses6 \
         libogg0 libopus0 libpcre3 libpq5 librabbitmq4 libshout3 libsndfile1 libspeexdsp1 libsqlite3-0 libssl3 \
-        libswscale6 libtiff6 libvorbis0a odbc-postgresql unixodbc wget \
+        libswscale6 libtiff6 libvorbis0a odbc-postgresql unixodbc wget libncurses5-dev libgsl-dev libpcap-dev sngrep \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy built artifacts from builder
 COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/lib /usr/lib
 
 # Copy configuration files
 COPY etc/odbc.ini /etc/
+COPY etc/odbcinst.ini /etc/
 COPY etc/switch.conf.xml /usr/local/freeswitch/conf/autoload_configs/
 
 # Configure dynamic linker

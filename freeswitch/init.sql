@@ -2,16 +2,16 @@
 DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'freeswitch') THEN
-        CREATE DATABASE freeswitch;
+        EXECUTE 'CREATE DATABASE freeswitch';
     END IF;
 END
 $$;
 
--- Create user if it doesn't exist
+-- Create role if it doesn't exist
 DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'freeswitch') THEN
-        CREATE USER freeswitch WITH PASSWORD 'freeswitch@vishalk17';
+        EXECUTE 'CREATE ROLE freeswitch WITH PASSWORD ''freeswitch@vishalk17'' LOGIN SUPERUSER CREATEDB';
     END IF;
 END
 $$;
