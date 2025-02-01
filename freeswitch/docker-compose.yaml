@@ -24,7 +24,7 @@ services:
   freeswitch:
     build: .
     container_name: freeswitch
-    image: vishalk17/freeswitch-1.10.12:v1.0 
+    image: vishalk17/freeswitch-1.10.12:v1.1 
     depends_on:
       postgresql:
         condition: service_healthy
